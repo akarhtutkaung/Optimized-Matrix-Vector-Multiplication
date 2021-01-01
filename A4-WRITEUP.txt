@@ -1,0 +1,228 @@
+                              ____________
+
+                               A4 WRITEUP
+                              ____________
+
+
+- Name: Ace Kaung
+- NetID: kaung006
+
+Answer the questions below according to the assignment
+specification. Write your answers directly in this text file and submit
+it along with your code.
+
+
+PROBLEM 1: optimized_matrix_trans_mult_vec()
+============================================
+
+  Do your timing study on apollo.cselabs.umn.edu
+
+
+(A) Paste Source Code
+~~~~~~~~~~~~~~~~~~~~~
+
+  Paste a copy of your source code for the function
+  optimized_matrix_trans_mult_vec() below.
+
+    if(mat.rows != vec.len){
+      printf("mat.rows (%ld) != vec.len (%ld)\n",mat.rows,vec.len);
+      return 1;
+    }
+    if(mat.cols != res.len){
+      printf("mat.cols (%ld) != res.len (%ld)\n",mat.cols,res.len);
+      return 2;
+    }
+
+    int length = mat.cols;    //set length
+    int limit = length/4;     //set limit, later multiply it with 4
+
+    for(int a=0; a<length; a++){  //initialized the result vector
+      VSET(res, a, 0);
+    }
+
+    for(int i=0; i<mat.rows; i++){    // set the vector...
+      int getV = VGET(vec, i);
+      int j=0;
+      for(; j<(limit*4); j+=4){
+
+        int el1 = MGET(mat, i, j);
+        int prod1 = el1 * getV;
+        VSET(res, j, prod1+VGET(res, j));     // put the result in the vector
+
+        int el2 = MGET(mat, i, j+1);
+        int prod2 = el2 * getV;
+        VSET(res, j+1, prod2+VGET(res, j+1));
+
+        int el3 = MGET(mat, i, j+2);
+        int prod3 = el3 * getV;
+        VSET(res, j+2, prod3+VGET(res, j+2));
+
+        int el4 = MGET(mat, i, j+3);
+        int prod4 = el4 * getV;
+        VSET(res, j+3, prod4+VGET(res, j+3));
+      }
+
+      for (; j < length; j++){    // for the remaining coloumns
+        int el = MGET(mat, i, j);
+        int prod = el * getV;
+        VSET(res, j, prod+VGET(res, j));
+      }
+    }
+    return 0;
+
+
+(B) Timing on Apollo
+~~~~~~~~~~~~~~~~~~~~
+
+  Paste a copy of the results of running `mult_bench' on
+  apollo.cselabs.umn.edu in the space below which shows how your
+  performance optimizations improved on the baseline codes.
+
+      kaung006@csel-apollo:~/Desktop/a4-code$ ./mult_bench
+      -bash: ./mult_bench: No such file or directory
+      kaung006@csel-apollo:~/Desktop/a4-code$ ./mult_benchmark
+      ==== Matrix Mult Benchmark Version 2 ====
+        SIZE       BASE       NORM        OPT BSPDUP NSPDUP POINTS
+         512 9.1300e-04 6.3500e-04 2.7300e-04   3.34   2.33      2
+        1024 3.7870e-03 2.5770e-03 1.0760e-03   3.52   2.39      2
+        1101 1.4838e-02 2.9670e-03 1.3050e-03  11.37   2.27      6
+        2048 8.0425e-02 1.0248e-02 4.7940e-03  16.78   2.14      9
+        4096 4.1468e-01 4.1144e-02 1.9794e-02  20.95   2.08     11
+        8192 2.2921e+00 1.6495e-01 7.9370e-02  28.88   2.08     15
+      RAW POINTS: 45
+      TOTAL POINTS: 35 / 35
+
+
+(C) Optimizations
+~~~~~~~~~~~~~~~~~
+
+  Describe in some detail the optimizations you used to speed the code
+  up.  THE CODE SHOULD CONTAIN SOME COMMENTS already to describe these
+  but in the section below, describe in English the techniques you used
+  to make the code run faster.  Format your descriptions into discrete
+  chunks such as.
+        Optimization 1: Blah bla blah... This should make run
+        faster because yakkety yakeety yak.
+
+        Optimization 2: Blah bla blah... This should make run
+        faster because yakkety yakeety yak.
+
+        ...  Optimization N: Blah bla blah... This should make run
+        faster because yakkety yakeety yak.
+  Full credit solutions will have a least two optimizations.
+
+      Optimization 1: use pipeline method to split up the jobs inside the loop
+      Optimization 2: instead of using the column loop then row loop for transpose that was mentioned in the original baseline_matvec_mult.c file, I used row loop then column loop.
+
+PROBLEM 2: Timing Search Algorithms
+===================================
+
+  Do your timing study on apollo.cselabs.umn.edu. In most cases, report
+  times larger than 1e-03 seconds as times shorter than this are
+  unreliable. Run searches for more repetitions to lengthen run times.
+
+
+(A) Min Size for Algorithmic Differences
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Determine the size of input array does one start to see a measurable
+  difference in the performance of the linear and logarithmic
+  algorithms.  Produce a timing table which includes all algorithms
+  which clearly demonstrates an uptick in the times associated with some
+  while others remain much lower.  Identify what size this appears to be
+  a occur.
+
+kaung006@csel-apollo:~/Desktop/a4-code$ ./search_benchmark 9 16 5
+LENGTH   SEARCHES       array       list     binary      tree
+   512       5120  1.1490e-03 2.8660e-03 2.3400e-04 1.8200e-04
+  1024      10240  4.4170e-03 1.1975e-02 4.8300e-04 3.7600e-04
+  2048      20480  1.7267e-02 1.3702e-01 1.0270e-03 7.8500e-04
+  4096      40960  6.8462e-02 7.4924e-01 2.1470e-03 1.6220e-03
+  8192      81920  2.7267e-01 4.1084e+00 4.4900e-03 3.5340e-03
+ 16384     163840  1.0929e+00 3.3535e+01 9.2360e-03 7.9340e-03
+ 32768     327680  4.3598e+00 1.6194e+02 1.9314e-02 1.6984e-02
+ 65536     655360  1.7437e+01 4.1307e+02 3.9882e-02 3.2855e-02
+
+ At length of 16384, it started to switch to positive power number of time taken.
+
+(B) Linear Search in List vs Array
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Determine whether the linear array and linked list search remain
+  approximately at the same performance level as size increases to large
+  data or whether one begins to become favorable over other. Determine
+  the approximate size at which this divergence becomes obvious. Discuss
+  reasons WHY this difference arises.
+
+    The performance is not the same, as the size increases, the linear array
+    search will become more slower than the linked list search. The reason I could
+    think of this is because of the sorted and not sorted. The Linear Array is not sorted
+    while the Linked list is sorted in this case.
+
+    kaung006@csel-apollo:~/Desktop/a4-code$ ./search_benchmark 4 13 10 al
+    LENGTH   SEARCHES       array       list
+        16        320  6.0000e-06 5.0000e-06
+        32        640  1.6000e-05 2.3000e-05
+        64       1280  5.4000e-05 1.0100e-04
+       128       2560  1.7300e-04 3.7800e-04
+       256       5120  6.1100e-04 1.4700e-03
+       512      10240  2.3020e-03 6.0370e-03
+      1024      20480  8.8040e-03 2.7000e-02
+      2048      40960  3.4518e-02 3.2421e-01
+      4096      81920  1.3686e-01 1.4047e+00
+      8192     163840  5.4390e-01 7.9172e+00
+
+
+This started to changed when the length reaches to 64 and as it's increases,
+it's started to noticeably changed later even though the length was not so large yet.
+
+(C) Binary Search in Tree vs Array
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Compare the binary array search and binary tree search on small to
+  very large arrays. Determine if there is a size at which the
+  performance of these two begins to diverge. If so, describe why this
+  might be happening based on your understanding of the data structures
+  and the memory system. If not, describe why you believe there is
+  little performance difference between the two.
+
+  kaung006@csel-apollo:~/Desktop/a4-code$ ./search_benchmark 15 23 5 bt
+  LENGTH   SEARCHES     binary      tree
+   32768     327680  1.9344e-02 1.7166e-02
+   65536     655360  3.9980e-02 5.0894e-02
+  131072    1310720  8.2805e-02 1.3624e-01
+  262144    2621440  1.7174e-01 3.2732e-01
+  524288    5242880  3.5606e-01 8.1366e-01
+ 1048576   10485760  7.3850e-01 2.1525e+00
+ 2097152   20971520  1.5250e+00 4.9455e+00
+ 4194304   41943040  3.1397e+00 7.2607e+00
+
+ These 2 started to diverge at the length of 131072, even though they started to diverge,
+ it was only very less when the length was already so large. I believe that since both are using binary search, the time complexity will be the same
+ except for the array and the tree.
+
+
+(D) Caching Effects on Algorithms
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  It is commonly believed that memory systems that feature a Cache will
+  lead to arrays performing faster than linked structures such as Linked
+  Lists and Binary Search Trees. Describe whether your timings confirm
+  or refute this belief.  Address both types of algorithms in your
+  answer:
+  - What effects does Cache have on Linear Search in arrays and lists
+    and why?
+      Since both of the arrays and lists go one after another without jumping around, I think
+      that the speed of the Cache would be the same.
+  - What effects does Cache have on Binary Search in arrays and trees
+    and why?
+      The speed of the Cache for the binary search in arrays and trees should be the same, because the
+      binary search jump around for both array and tree.
+
+
+(E) OPTIONAL MAKEUP CREDIT
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  If you decided to make use of a table of function pointers/structs
+  which is worth makeup credit, describe your basic design for this
+  below.
